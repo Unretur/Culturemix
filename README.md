@@ -1,25 +1,50 @@
-﻿# CultureMix
+# CultureMix
 
-An agent that designs culturally intelligent events, grounded in Qloo's cultural intelligence API.
+An AI agent that designs culturally intelligent event concepts for a specific city, audience, and budget, using Qloo's cultural intelligence API.
 
 Built for the Qloo Agentic Hackathon 2026.
 
 ## Status
 
-Early skeleton. Qloo endpoint paths are not yet verified against a live response. The app labels every result as LIVE or MOCK.
+This is an early build. Here is what is and isn't working:
 
-## Run locally
+- **Working and tested:** budget check logic (`src/planner.py`), with unit tests in `tests/`.
+- **Written, not yet verified:** the Qloo client (`src/qloo_client.py`). Endpoint paths and parameters have not been checked against a live response. Until they are, Qloo output is not treated as real.
+- **Not yet built:** event plan generation, cultural connection graph, baseline comparison.
 
-    python -m venv .venv
-    .venv\Scripts\activate
-    pip install -r requirements.txt
-    copy .env.example .env
-    streamlit run src/app.py
+The app labels every result as **LIVE (Qloo)** or **MOCK, not Qloo**. Mock output is development data and is never presented as Qloo results.
 
-Put your real key in `.env`. Never commit `.env`.
+## How Qloo is used
 
-Run tests with `pytest tests/`.
+The app sends search requests to the Qloo hackathon API (`https://hackathon.api.qloo.com`) with the `X-Api-Key` header. The key is read from the `QLOO_API_KEY` environment variable and is never stored in the repository.
 
-## License
+## How cost figures are handled
 
-MIT. See `LICENSE`.
+Costs shown in the budget check are estimates, not vendor prices. The app does not look up real prices for venues or artists.
+
+## Setup
+
+Requires Python 3.11 or newer.
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+```
+
+Open `.env` and set `QLOO_API_KEY` to your hackathon key. Never commit `.env`.
+
+## Run
+
+```bash
+streamlit run src/app.py
+```
+
+## Test
+
+```bash
+pytest tests/
+```
+
+## Project layout
