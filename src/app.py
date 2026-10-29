@@ -19,14 +19,32 @@ st.set_page_config(page_title="CultureMix", page_icon="🎶", layout="wide")
 
 CSS = """
 <style>
-.hero {font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0;}
-.sub {color: #6b7280; margin-top: 0.2rem; margin-bottom: 1.2rem;}
-.badge {display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; margin-right: 6px;}
-.b-qloo {background: #d1fae5; color: #065f46;}
-.b-mock {background: #e5e7eb; color: #374151;}
-.b-hyp {background: #fef3c7; color: #92400e;}
-.card {border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px;}
-.muted {color: #6b7280; font-size: 0.9rem;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+html, body, [class*="css"] { font-family: 'Inter', system-ui, sans-serif; }
+.block-container { padding-top: 1.5rem; max-width: 1200px; }
+.hero {
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f766e 100%);
+  border-radius: 20px; padding: 28px 32px; margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.hero h1 {margin: 0; font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; color: #fff;}
+.hero p {margin: 6px 0 0 0; color: #c7d2fe; font-size: 1.02rem;}
+.chips {margin-top: 14px;}
+.chip {display: inline-block; padding: 4px 12px; margin-right: 8px; border-radius: 999px;
+  background: rgba(255,255,255,0.12); color: #e0f2fe; font-size: 0.8rem; font-weight: 600;}
+.card {background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px;}
+.card-title {font-weight: 700; color: #f9fafb; font-size: 1rem;}
+.muted {color: #9ca3af; font-size: 0.85rem;}
+.concept {font-size: 1.15rem; line-height: 1.6; color: #f3f4f6;}
+.badge {display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.74rem;
+  font-weight: 700; margin-right: 6px; margin-top: 6px;}
+.b-qloo {background: rgba(52,211,153,0.15); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.35);}
+.b-mock {background: rgba(148,163,184,0.15); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.3);}
+.b-hyp {background: rgba(251,191,36,0.12); color: #fcd34d; border: 1px solid rgba(251,191,36,0.35);}
+.stTabs [data-baseweb="tab-list"] {gap: 6px;}
+.stTabs [data-baseweb="tab"] {border-radius: 10px; padding: 8px 14px;}
+[data-testid="stMetric"] {background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 14px 16px;}
+[data-testid="stSidebar"] {background: #0f1424;}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -202,9 +220,12 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-st.markdown('<div class="hero">CultureMix</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="sub">Event concepts grounded in cultural data, checked against your budget.</div>',
+    '<div class="hero"><h1>CultureMix</h1>'
+    '<p>Event concepts grounded in cultural data, checked against your budget.</p>'
+    '<div class="chips"><span class="chip">Qloo cultural data</span>'
+    '<span class="chip">Gemini planning</span>'
+    '<span class="chip">Budget-checked</span></div></div>',
     unsafe_allow_html=True,
 )
 
