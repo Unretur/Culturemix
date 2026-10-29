@@ -9,7 +9,6 @@ Built for the Qloo Agentic Hackathon 2026.
 Early skeleton. Qloo endpoint paths are not yet verified against a live response. The app labels every result as LIVE or MOCK.
 
 ## Run locally
-
     python -m venv .venv
     .venv\Scripts\activate
     pip install -r requirements.txt
