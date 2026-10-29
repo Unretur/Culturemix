@@ -2,94 +2,131 @@
 
 # CultureMix
 
-**An AI agent that designs culturally intelligent event concepts.**
+### Event concepts grounded in cultural data, checked against a budget.
 
-Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/).
-
-**Live demo:** https://culturemix-znjfvxu82zgogdpzegahmd.streamlit.app/
+[**Live demo**](https://culturemix-znjfvxu82zgogdpzegahmd.streamlit.app/) · [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/) · [Report an issue](../../issues)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)
+![Streamlit](https://img.shields.io/badge/built%20with-Streamlit-ff4b4b)
+![Qloo](https://img.shields.io/badge/data-Qloo%20API-34d399)
+
+</div>
 
 ---
 
-## What it does
+<!-- Add screenshots to docs/ after you take them, then uncomment these lines:
+![Event concept and recommendations](docs/concept.png)
+![Qloo connection network](docs/connections.png)
+-->
 
-Enter a city, a budget, and an artist or interest. CultureMix:
+## Why CultureMix
 
-1. Searches the Qloo hackathon API for related entities and their tags.
-2. Draws a 3D network of those entities, with edges between entities that share a Qloo tag.
-3. Asks Gemini to draft an event concept, using only the Qloo entities as grounded recommendations. Anything the model suggests beyond that is labelled as a hypothesis.
-4. Checks the plan's JSON structure, and rejects any recommendation marked as Qloo-backed that isn't in the Qloo results.
-5. Checks a planning budget, with estimates labelled as estimates.
-6. Optionally runs the same brief with no Qloo evidence, so you can compare the two plans side by side.
+Organisers choosing artists, food, and experiences for an audience usually work from popularity rankings. Those rankings don't show which things actually belong together culturally.
 
-## How Qloo is used
+CultureMix starts from Qloo's cultural data. It shows which entities are linked by shared tags, builds a plan from those links, and labels every recommendation by its source: **Qloo-backed**, **mock**, or an **LLM hypothesis**. It never presents a guess as cultural evidence.
 
-- Search requests go to `https://hackathon.api.qloo.com/search` with the `X-Api-Key` header.
-- The app uses the returned `name`, `entity_id`, `types`, and `tags` fields.
-- Connections are formed only from tags Qloo returned. The app never invents a link.
-- Results are labelled **Qloo-backed** when they come from Qloo, and **Mock, not Qloo** when no key is set.
+## Features
 
-## Status
+- **Qloo-grounded search.** Live entity search through the Qloo hackathon API, with names, IDs, and tags.
+- **Connection network.** Entities that share a Qloo tag are linked, with the shared tags on each edge. Drawn as an interactive 3D view, with a 2D diagram alongside.
+- **Grounded event plan.** Gemini drafts a concept and schedule. Its output is checked before display, and any recommendation marked as Qloo-backed must match a real Qloo result.
+- **Budget check.** Planning estimates are totalled against your budget, with a breakdown and a remaining figure.
+- **Plain-LLM comparison.** The same brief can be run with no Qloo evidence, shown side by side with the Qloo-informed plan.
+- **Honest labelling.** Live Qloo data, mock data, and hypotheses are visually distinct throughout.
 
-| Component | Status |
-|---|---|
-| Qloo search (live) | Working. Returns real entities and tags. |
-| Shared-tag connections and 3D network | Working. Drawn only from Qloo tags. |
-| Event plan with Gemini | Working. Plans are checked before display. |
-| Plain-LLM comparison | Working. Runs the same brief without Qloo. |
-| Budget check | Working. Costs are planning estimates, not vendor prices. |
-| Formal evaluation report | Not built. The comparison is shown in-app, not as a benchmark. |
+## How it works
 
-## Known limitations
-
-- The Qloo search is by entity name. Results depend on how the name matches; a generic phrase such as "independent music" returns weak results. Use an artist name.
-- Shared-tag connections appear only when Qloo returns overlapping tags. Some searches will show few or no links.
-- Cost figures are planning estimates, not quotes from vendors.
-- Gemini's free tier sometimes returns temporary "high demand" errors. The app retries, but you may need to submit again.
-- The 3D view loads Three.js from unpkg, so it needs internet access. The 2D diagram is available under the expander.
-
-## Run locally
-
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env
+```mermaid
+flowchart LR
+    A[Event brief<br/>city, interest, budget] --> B[Qloo search<br/>entities + tags]
+    B --> C[Shared-tag links<br/>Qloo-derived only]
+    B --> D[Gemini planner]
+    C --> E[3D network view]
+    D --> F[Validation<br/>grounded names only]
+    F --> G[Plan, schedule,<br/>budget check]
+    D -. no Qloo evidence .-> H[Plain-LLM baseline]
 ```
 
-Put your keys in `.env`:
+## Qloo API usage
+
+- Endpoint: `GET https://hackathon.api.qloo.com/search`
+- Authentication: `X-Api-Key` header, read from the `QLOO_API_KEY` environment variable
+- Fields used: `name`, `entity_id`, `types`, `tags`
+- Entity types queried: artists by default; the interest field accepts any artist name
+
+The key is never logged, displayed, or committed.
+
+## Quick start
+
+Requires Python 3.11 or newer.
+
+```bash
+git clone https://github.com/Unretur/Culturemix.git
+cd Culturemix
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # macOS / Linux
+pip install -r requirements.txt
+copy .env.example .env          # Windows
+# cp .env.example .env          # macOS / Linux
+```
+
+Add your keys to `.env`:
 
 ```
 QLOO_API_KEY=your_qloo_key
 GEMINI_API_KEY=your_gemini_key
 ```
 
-Then start the app:
+Run the app:
 
 ```bash
 streamlit run src/app.py
 ```
 
-Run the tests (they need no keys or network):
+Without keys, the app runs in mock mode and labels every result as mock.
+
+## Tests
 
 ```bash
 pytest tests/
 ```
+
+The tests run offline. They cover budget arithmetic, plan validation, Qloo response normalisation, and the mock-labelling rules.
 
 ## Project structure
 
 ```
 src/
   app.py          Streamlit interface
-  planner.py      Plan building, validation, and budget checks
+  planner.py      Plan building, validation, budget checks
   llm.py          Gemini client with retries
   qloo_client.py  Qloo API client and mock adapter
   connections.py  Shared-tag links between Qloo entities
-  viz3d.py        3D network view
+  viz3d.py        3D network view (Three.js)
 tests/            Offline unit tests
+.streamlit/       Theme configuration
 ```
+
+## Limitations
+
+- Qloo search matches entity names, so the quality of results depends on the input. Artist names work best.
+- Connections exist only where Qloo returns overlapping tags. Some searches show few or none.
+- Costs are planning estimates, not vendor quotes.
+- The plain-LLM comparison is shown in the app. It is not a benchmark with a scored test set.
+- Gemini's free tier sometimes returns temporary "high demand" errors. Retry the request.
+- The 3D view loads Three.js from unpkg and needs internet access. The 2D diagram works without it.
+
+## Roadmap
+
+- Shared-affinity queries across more Qloo entity types, once verified against the API.
+- A fixed set of evaluation briefs with recorded results.
+- Organiser-supplied vendor quotes in the budget check.
+
+## Acknowledgements
+
+Built on [Qloo](https://www.qloo.com/) for cultural intelligence data, [Streamlit](https://streamlit.io/) for the interface, [Google Gemini](https://ai.google.dev/) for plan drafting, and [Three.js](https://threejs.org/) for the 3D view.
 
 ## License
 
