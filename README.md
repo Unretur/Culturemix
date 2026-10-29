@@ -2,195 +2,95 @@
 
 # CultureMix
 
-**An AI agent that designs culturally intelligent events.**
+**An AI agent that designs culturally intelligent event concepts.**
 
-Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/)
+Built for the [Qloo Agentic Hackathon 2026](https://qloo.devpost.com/).
+
+**Live demo:** https://culturemix-znjfvxu82zgogdpzegahmd.streamlit.app/
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![Status](https://img.shields.io/badge/status-in%20development-orange)
-
-## Run locally
-    python -m venv .venv
-    .venv\Scripts\activate
-    pip install -r requirements.txt
-    copy .env.example .env
-    streamlit run src/app.py
 
 ---
 
-## Overview
+## What it does
 
-Event organisers, venues, and brands need to decide which artists, food concepts, and experiences belong together for a specific audience. Popular rankings don't reliably capture that, and a generic language model can produce plausible but unsupported ideas.
+Enter a city, a budget, and an artist or interest. CultureMix:
 
-CultureMix takes an event brief (city, budget, audience interests) and is designed to:
+1. Searches the Qloo hackathon API for related entities and their tags.
+2. Draws a 3D network of those entities, with edges between entities that share a Qloo tag.
+3. Asks Gemini to draft an event concept, using only the Qloo entities as grounded recommendations. Anything the model suggests beyond that is labelled as a hypothesis.
+4. Checks the plan's JSON structure, and rejects any recommendation marked as Qloo-backed that isn't in the Qloo results.
+5. Checks a planning budget, with estimates labelled as estimates.
+6. Optionally runs the same brief with no Qloo evidence, so you can compare the two plans side by side.
 
-1. Retrieve cultural entities and affinities from the Qloo API.
-2. Use an LLM to turn that evidence into a candidate event concept.
-3. Check the concept against the budget.
-4. Label every recommendation by its source: Qloo-backed evidence, or an LLM hypothesis.
+## How Qloo is used
 
-## Current status
+- Search requests go to `https://hackathon.api.qloo.com/search` with the `X-Api-Key` header.
+- The app uses the returned `name`, `entity_id`, `types`, and `tags` fields.
+- Connections are formed only from tags Qloo returned. The app never invents a link.
+- Results are labelled **Qloo-backed** when they come from Qloo, and **Mock, not Qloo** when no key is set.
+
+## Status
 
 | Component | Status |
 |---|---|
-| Budget validation (`src/planner.py`) | Implemented, unit tested |
-| Qloo API client (`src/qloo_client.py`) | Implemented; endpoint behaviour not yet verified against live responses |
-| Streamlit interface (`src/app.py`) | Implemented; shows LIVE or MOCK source on every result |
-| Event plan generation (LLM) | In progress |
-| Cultural connection graph | Planned |
-| Baseline evaluation (CultureMix vs. plain LLM) | Planned |
+| Qloo search (live) | Working. Returns real entities and tags. |
+| Shared-tag connections and 3D network | Working. Drawn only from Qloo tags. |
+| Event plan with Gemini | Working. Plans are checked before display. |
+| Plain-LLM comparison | Working. Runs the same brief without Qloo. |
+| Budget check | Working. Costs are planning estimates, not vendor prices. |
+| Formal evaluation report | Not built. The comparison is shown in-app, not as a benchmark. |
 
-CultureMix does not yet produce a full event plan. Results are labelled **LIVE (Qloo)** or **MOCK, not Qloo**. Mock output is development data and is never presented as Qloo output.
+## Known limitations
 
-## Design principles
+- The Qloo search is by entity name. Results depend on how the name matches; a generic phrase such as "independent music" returns weak results. Use an artist name.
+- Shared-tag connections appear only when Qloo returns overlapping tags. Some searches will show few or no links.
+- Cost figures are planning estimates, not quotes from vendors.
+- Gemini's free tier sometimes returns temporary "high demand" errors. The app retries, but you may need to submit again.
+- The 3D view loads Three.js from unpkg, so it needs internet access. The 2D diagram is available under the expander.
 
-- **Evidence over assertion.** Recommendations are tied to the source they came from.
-- **No invented facts.** Costs are labelled as estimates, not vendor prices. Partnerships and audience statistics are not fabricated.
-- **Honest labelling.** Mock and live data are visually distinct throughout the interface.
-
-## Architecture
-
-```
-  Event brief (city, budget, interests)
-              │
-              ▼
-  ┌───────────────────────┐        ┌────────────────────────┐
-  │ Qloo client           │ ─────▶ │ Qloo hackathon API     │
-  │ src/qloo_client.py    │ ◀───── │ hackathon.api.qloo.com │
-  └───────────┬───────────┘        └────────────────────────┘
-              │ evidence set
-              ▼
-  ┌───────────────────────┐
-  │ Planner               │  budget and schedule checks
-  │ src/planner.py        │
-  └───────────┬───────────┘
-              ▼
-  ┌───────────────────────┐
-  │ Streamlit interface   │  results labelled LIVE or MOCK
-  │ src/app.py            │
-  └───────────────────────┘
-```
-
-## Getting started
-
-### Requirements
-
-- Python 3.11 or newer
-- A Qloo hackathon API key
-- An LLM API key (Google Gemini; the free tier is sufficient for development)
-
-### Installation
+## Run locally
 
 ```bash
-git clone https://github.com/Unretur/Culturemix.git
-cd Culturemix
 python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # macOS / Linux
+.venv\Scripts\activate
 pip install -r requirements.txt
+copy .env.example .env
 ```
 
-### Configuration
-
-Copy the example environment file and add your keys:
-
-```bash
-copy .env.example .env          # Windows
-# cp .env.example .env          # macOS / Linux
-```
+Put your keys in `.env`:
 
 ```
 QLOO_API_KEY=your_qloo_key
 GEMINI_API_KEY=your_gemini_key
 ```
 
-Never commit `.env`. It is excluded by `.gitignore`.
-
-### Run
+Then start the app:
 
 ```bash
 streamlit run src/app.py
 ```
 
-Open the URL shown in the terminal (usually `http://localhost:8501`).
-
-### Test
+Run the tests (they need no keys or network):
 
 ```bash
 pytest tests/
 ```
 
-The tests run offline and do not require API keys.
-
 ## Project structure
 
 ```
-Culturemix/
-├── src/
-│   ├── app.py            Streamlit interface
-│   ├── planner.py        Budget and schedule validation
-│   └── qloo_client.py    Qloo API client and mock adapter
-├── tests/
-│   ├── test_planner.py
-│   └── test_qloo_client.py
-├── .env.example          Template for required environment variables
-├── requirements.txt
-├── LICENSE
-└── README.md
+src/
+  app.py          Streamlit interface
+  planner.py      Plan building, validation, and budget checks
+  llm.py          Gemini client with retries
+  qloo_client.py  Qloo API client and mock adapter
+  connections.py  Shared-tag links between Qloo entities
+  viz3d.py        3D network view
+tests/            Offline unit tests
 ```
-
-## Qloo API usage
-
-All requests go to the hackathon base URL `https://hackathon.api.qloo.com` and send the key in the `X-Api-Key` header. The key is read from the `QLOO_API_KEY` environment variable and is never logged, displayed, or stored in the repository.
-
-Endpoint paths and parameters are being verified against live responses. Any change from the documented behaviour will be noted here.
-
-## Limitations
-
-- Qloo endpoint behaviour has not yet been confirmed against live responses.
-- Cost figures are estimates for planning, not quotes from vendors.
-- The planning and evaluation components are still under development.
-- Free-tier LLM services can return temporary "high demand" errors; the planner retries these.
-
-## Acknowledgements
-
-- [Qloo](https://www.qloo.com/) for the cultural intelligence API and the hackathon.
-- [Streamlit](https://streamlit.io/) for the interface framework.
-- [Google Gemini](https://ai.google.dev/) for the language model API.
 
 ## License
 
-Copyright (c) 2026 Yash
-
-Licensed under the MIT License. See [LICENSE](LICENSE) for the full text.
-
-```
-MIT License
-
-Copyright (c) 2026 Yash
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-<div align="center">
-Built for the Qloo Agentic Hackathon 2026
-</div>
+MIT. See [LICENSE](LICENSE).
